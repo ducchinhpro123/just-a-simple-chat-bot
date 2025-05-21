@@ -421,11 +421,11 @@ You are given a reference answer from Perplexity. Use it to help answer the user
     // Init welcome message
     onMount( async () => {
         loading = true;
-        /* const response: any = await chat.sendMessage({ message: "Xin chào!" }); */
+        const response: any = await chat.sendMessage({ message: "Xin chào!" });
 
         chat_history = [{
             sender: 'bot',
-            htmlContent: "Chao ban",
+            htmlContent: response.text,
             name: 'BOT',
             img: bot_logo,
             time: formatDate(new Date())
