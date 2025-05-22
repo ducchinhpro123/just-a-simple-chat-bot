@@ -32,6 +32,8 @@
 		"jsdom": "^26.1.0",
 		"marked": "^15.0.11",
 		"marked-highlight": "^2.2.1",
+		"prettier": "^3.5.3",
+		"prettier-plugin-svelte": "^3.4.0",
 		"pygmentize-bundled": "^2.3.0"
 	}
 }
