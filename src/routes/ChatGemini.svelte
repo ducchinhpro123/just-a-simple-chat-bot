@@ -115,7 +115,10 @@ You are given a reference answer from Perplexity. Use it to help answer the user
                             /* console.log(base64); */
                         };
                         reader.onerror = (error) => {
-                            console.error('Error reading file as base64:', error);
+                            console.error(
+                                'Error reading file as base64:',
+                                error
+                            );
                             error_msg = 'Failed to read image file for API.';
                             preview_image = null;
                         };
@@ -355,6 +358,10 @@ You are given a reference answer from Perplexity. Use it to help answer the user
         return combined_prompt;
     }
 
+    async function delay(ms: number): Promise<void> {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
     async function generate(msg: string | null) {
         // 1. if the user upload file -> process it
         // 2. if the user use perplexity search engine -> use it
@@ -424,12 +431,16 @@ You are given a reference answer from Perplexity. Use it to help answer the user
                     {
                         fileData: {
                             fileUri: (content[0] as any).fileData.fileUri,
-                            mimeType: (content[0] as any).fileData.mimeType
-                        }
+                            mimeType: (content[0] as any).fileData.mimeType,
+                        },
                     },
                     {
-                        text: combined_prompt ? combined_prompt : (msg ? msg : '')
-                    }
+                        text: combined_prompt
+                            ? combined_prompt
+                            : msg
+                              ? msg
+                              : '',
+                    },
                 ];
 
                 /* response_stream = await ai.models.generateContentStream({ */
@@ -443,10 +454,15 @@ You are given a reference answer from Perplexity. Use it to help answer the user
                 response_stream = await chat.sendMessageStream({
                     message: content_send,
                 });
-
-            } else { // if it's not contain media type
+            } else {
+                // if it's not contain media type
                 response_stream = await chat.sendMessageStream({
-                    message: combined_prompt !== '' ? combined_prompt : (msg ? msg : '')
+                    message:
+                        combined_prompt !== ''
+                            ? combined_prompt
+                            : msg
+                              ? msg
+                              : '',
                 });
 
                 loading = false;
@@ -486,12 +502,12 @@ You are given a reference answer from Perplexity. Use it to help answer the user
     // Init welcome message
     onMount(async () => {
         loading = true;
-        /* const response: any = await chat.sendMessage({ message: 'Xin chào!' }); */
+        const response: any = await chat.sendMessage({ message: 'Xin chào!' });
 
         chat_history = [
             {
                 sender: 'bot',
-                htmlContent: 'hi',
+                htmlContent: response.text,
                 name: 'BOT',
                 img: bot_logo,
                 time: formatDate(new Date()),
@@ -846,7 +862,8 @@ You are given a reference answer from Perplexity. Use it to help answer the user
             gap: 12px; /* Increased gap between textarea and controls-group */
         }
 
-        .msger-input { /* Textarea */
+        .msger-input {
+            /* Textarea */
             width: 100%;
             box-sizing: border-box;
             /* max-height: 70px; /* Base style - consider increasing for mobile */
@@ -896,12 +913,14 @@ You are given a reference answer from Perplexity. Use it to help answer the user
             /* Other visual styles (color, background, border) inherited or set here */
         }
 
-        .msger-send-btn .send-icon { /* SVG inside send button */
+        .msger-send-btn .send-icon {
+            /* SVG inside send button */
             width: 20px;
             height: 20px;
         }
 
-        .file-upload-label { /* Attach icon button */
+        .file-upload-label {
+            /* Attach icon button */
             padding: 10px; /* Match send button's vertical padding for consistent height */
             /* flex-shrink: 0; /* Default, good */
             /* Other visual styles inherited or set here */
