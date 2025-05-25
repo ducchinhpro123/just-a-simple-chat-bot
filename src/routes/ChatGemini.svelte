@@ -242,7 +242,8 @@ You are given a reference answer from Perplexity. Use it to help answer the user
         time: string;
     };
 
-    function escapeHTML(str: string) {
+    function escapeHTML(str: string | null) {
+        if (str === null) return '';
         return str
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
@@ -312,12 +313,6 @@ You are given a reference answer from Perplexity. Use it to help answer the user
                 throw new Error('File processing failed.');
             }
 
-            /*             if (msg) { */
-            /*                 content = [ msg ]; */
-            /*             } else { */
-            /*                 content = []; */
-            /*             } */
-
             if (file.uri && file.mimeType) {
                 const fileContent = createPartFromUri(file.uri, file.mimeType);
                 content.push(fileContent);
@@ -358,10 +353,6 @@ You are given a reference answer from Perplexity. Use it to help answer the user
         return combined_prompt;
     }
 
-    async function delay(ms: number): Promise<void> {
-        return new Promise((resolve) => setTimeout(resolve, ms));
-    }
-
     async function generate(msg: string | null) {
         // 1. if the user upload file -> process it
         // 2. if the user use perplexity search engine -> use it
@@ -369,20 +360,22 @@ You are given a reference answer from Perplexity. Use it to help answer the user
 
         // if i dont assign any file, then i will use combined_prompt
 
+        /* if (loading || (msg?.trim() === '' && !file_upload)) return; */
+
         loading = true;
         message = ''; // reset message (prompt)
 
-        let marked_parsed: any = marked.parse(
-            escapeHTML(msg ? msg : `\n${(file_upload as any).name}`)
-        );
+        /* let marked_parsed: any = marked.parse( */
+        /*     escapeHTML(msg ? msg : `\n${(file_upload as any).name}`) */
+        /* ); */
 
+        let m: any = marked.parse(escapeHTML(msg) +
+                                           (file_upload ?  `<br/><i>Tệp đính kèm: ${(file_upload as any).name}</i>` : ''));
         chat_history = [
             ...chat_history,
             {
                 sender: 'user',
-                /* content: msg ? msg : (file_upload as any).name, */
-                content: DOMPurify.sanitize(marked_parsed),
-                htmlContent: DOMPurify.sanitize(marked_parsed),
+                htmlContent: DOMPurify.sanitize(m),
                 name: 'YOU',
                 img: user_logo,
                 time: formatDate(new Date()),
@@ -392,7 +385,14 @@ You are given a reference answer from Perplexity. Use it to help answer the user
         let content: ContentListUnion | null = [];
         // process file upload
         if (file_upload) {
-            content = await process_file_upload();
+            try {
+                console.log('waiting');
+                content = await process_file_upload();
+            } catch (e) {
+                console.log(e);
+                chat_history.pop(); // pop user message
+                return;
+            }
         }
         // use perplexity if check
         let combined_prompt = '';
@@ -502,7 +502,7 @@ You are given a reference answer from Perplexity. Use it to help answer the user
     // Init welcome message
     onMount(async () => {
         loading = true;
-        const response: any = await chat.sendMessage({ message: 'Xin chào!' });
+        const response: any = await chat.sendMessage({ message: 'Hi' });
 
         chat_history = [
             {
@@ -779,13 +779,6 @@ You are given a reference answer from Perplexity. Use it to help answer the user
         line-height: 1;
     }
 
-    .msger-send-btn .send-icon {
-        /* Target SVG inside send button specifically if needed */
-        width: 20px; /* Keep consistent with previous icon size */
-        height: 20px;
-        fill: currentColor;
-    }
-
     .msger-send-btn:disabled {
         opacity: 0.6;
         cursor: not-allowed;
@@ -899,11 +892,6 @@ You are given a reference answer from Perplexity. Use it to help answer the user
             font-size: 16px; /* Ensure checkmark is clear */
         }
 
-        .action-buttons-group {
-            /* display: flex; align-items: center; gap: 8px; width: 100%; /* Inherited */
-            /* This group keeps send button and attach icon side-by-side */
-        }
-
         .msger-send-btn {
             flex-grow: 1; /* Allows button to take more space, useful for "Vui lòng chờ..." */
             justify-content: center; /* Centers text/icon if button grows */
@@ -911,12 +899,6 @@ You are given a reference answer from Perplexity. Use it to help answer the user
             font-size: 0.95em;
             /* line-height: 1; /* Base style, usually fine with flex align-items: center */
             /* Other visual styles (color, background, border) inherited or set here */
-        }
-
-        .msger-send-btn .send-icon {
-            /* SVG inside send button */
-            width: 20px;
-            height: 20px;
         }
 
         .file-upload-label {
@@ -974,10 +956,6 @@ You are given a reference answer from Perplexity. Use it to help answer the user
         .msger-send-btn {
             font-size: 0.9em;
             padding: 8px 10px;
-        }
-        .msger-send-btn .send-icon {
-            width: 18px;
-            height: 18px;
         }
 
         .file-upload-label {
@@ -1060,8 +1038,9 @@ You are given a reference answer from Perplexity. Use it to help answer the user
         display: flex;
         align-items: flex-end;
         margin-bottom: 10px;
-        line-height: 1.4;
+        line-height: 1.5;
     }
+
     .msg:last-of-type {
         margin: 0;
     }
@@ -1161,11 +1140,27 @@ You are given a reference answer from Perplexity. Use it to help answer the user
         display: block;
     }
 
+    :global(.right-msg .msg-text code) {
+        background: rgba(255, 255, 255, 0.2);
+        color: #ffeb3b;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
     :global(.msg-text code) {
-        background: none;
-        color: inherit;
-        padding: 0;
-        font-size: inherit;
+        background: rgba(255, 255, 255, 0.1);
+        color: #e91e63;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.9em;
+        font-family: 'Courier New', Consolas, Monaco, monospace;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        font-weight: 500;
+    }
+
+    :global(.left-msg .msg-text code) {
+        background: rgba(0, 0, 0, 0.1);
+        color: #2196f3;
+        border: 1px solid rgba(0, 0, 0, 0.2);
     }
 
     .msger-chat {
