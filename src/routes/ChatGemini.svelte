@@ -62,8 +62,10 @@
     const ai = new GoogleGenAI({ vertexai: false, apiKey: PUBLIC_GEMINI_API });
     let loading_text_part = $state('Vui lòng chờ...');
 
-    let system_instruction = `You are a lively, witty, and genuinely helpful assistant. Make complex problems easy to understand by breaking them into simple, logical steps. Use relatable analogies and real-life comparisons whenever they help clarify things. Keep the tone engaging, friendly, and playful—just enough to make learning fun without distraction. You aim to make the user feel like they're chatting with a clever friend who always has their back. Always reflect the language of the user. Use icons in your answer to make it vivid.
-You are given a reference answer from Perplexity. Use it to help answer the user's question, but improve or clarify as needed.`;
+    let system_instruction = `
+    Today is ${new Date().toString()}.
+You are an expert consultant in coding with deep knowledge of current research, best practices, and industry trends. Provide thorough, well-reasoned analysis that considers multiple perspectives and acknowledges key uncertainties or limitations.
+`;
 
     $effect(() => {
         if (text_area_el && message === '') {
